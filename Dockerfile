@@ -73,7 +73,8 @@ RUN wget -O models/unet/flux_dev.safetensors https://civitai.com/api/download/mo
     wget -O models/loras/flux_realism_lora.safetensors https://huggingface.co/comfyanonymous/flux_RealismLora_converted_comfyui/resolve/main/flux_realism_lora.safetensors && \
     wget -O models/loras/darkfantasy_illustration_v2.safetensors https://huggingface.co/nerijs/dark-fantasy-illustration-flux/resolve/main/darkfantasy_illustration_v2.safetensors && \
     wget -O models/loras/1shm43l_v3.safetensors https://huggingface.co/k0n8/IshmaelV3/resolve/main/1shm43l_v3.safetensors && \
-    wget -O models/loras/qu33qu3g_v3.safetensors https://huggingface.co/k0n8/Queequeng3k/resolve/main/qu33qu3g_v3.safetensors 
+    wget -O models/loras/qu33qu3g_v3.safetensors https://huggingface.co/k0n8/Queequeng3k/resolve/main/qu33qu3g_v3.safetensors && \
+    wget -O models/loras/flux-RealismLora.safetensors https://huggingface.co/XLabs-AI/flux-RealismLora/resolve/main/lora.safetensors
 
 # Stage 3: Final image
 FROM base as final
