@@ -1,1 +1,2 @@
+#!/bin/bash
 docker build --platform linux/amd64 -t $IMAGE_NAME .
