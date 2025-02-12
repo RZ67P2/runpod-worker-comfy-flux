@@ -1,7 +1,7 @@
 #FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu20.04
 
 # Stage 1: Base image with common dependencies
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 as base
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -54,6 +54,34 @@ ADD *snapshot*.json /
 RUN /restore_snapshot.sh
 
 # Single CMD at the end
+CMD ["/start.sh"]
+
+# Stage 2: Download models
+FROM base as downloader
+
+# Change working directory to ComfyUI
+WORKDIR /comfyui
+
+# Create necessary directories
+RUN mkdir -p models/checkpoints models/vae models/unet models/clip
+
+RUN wget -O models/unet/flux_dev.safetensors https://civitai.com/api/download/models/691639?type=Model&format=SafeTensor&size=full&fp=fp32&token=70b8cd8fefe8eae3b6d88c3e7e0f3ec6 && \
+    wget -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
+    wget -O models/clip/longclip-L.pt https://huggingface.co/BeichenZhang/LongCLIP-L/resolve/main/longclip-L.pt && \
+    wget -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors && \
+    wget -O models/upscale_models/RealESRGAN_x2.pth https://huggingface.co/ai-forever/Real-ESRGAN/resolve/main/RealESRGAN_x2.pth && \
+    wget -O models/loras/flux_realism_lora.safetensors https://huggingface.co/comfyanonymous/flux_RealismLora_converted_comfyui/resolve/main/flux_realism_lora.safetensors && \
+    wget -O models/loras/darkfantasy_illustration_v2.safetensors https://huggingface.co/nerijs/dark-fantasy-illustration-flux/resolve/main/darkfantasy_illustration_v2.safetensors && \
+    wget -O models/loras/1shm43l_v3.safetensors https://huggingface.co/k0n8/IshmaelV3/resolve/main/1shm43l_v3.safetensors && \
+    wget -O models/loras/qu33qu3g_v3.safetensors https://huggingface.co/k0n8/Queequeng3k/resolve/main/qu33qu3g_v3.safetensors 
+
+# Stage 3: Final image
+FROM base as final
+
+# Copy models from stage 2 to the final image
+COPY --from=downloader /comfyui/models /comfyui/models
+
+# Start container
 CMD ["/start.sh"]
 
 #--platform linux/amd64
