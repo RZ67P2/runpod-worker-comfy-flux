@@ -1,7 +1,7 @@
 #FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu20.04
 
 # Stage 1: Base image with common dependencies
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu20.04 as base
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 as base
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,23 +14,21 @@ ENV CMAKE_BUILD_PARALLEL_LEVEL=8
 
 # Install Python, git and other necessary tools
 RUN apt-get update && apt-get install -y \
-    python3.10 \
+    python3.11 \
     python3-pip \
     git \
     wget \
     libgl1 \
     expect \
-    && ln -sf /usr/bin/python3.10 /usr/bin/python \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
 # Clean up to reduce image size
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-# update pip and install comfy-cli
-RUN python -m pip install --upgrade pip && \
-    pip --version && \
-    pip install --no-cache-dir --upgrade comfy-cli && \
-    comfy --version
+# Install comfy-cli
+RUN pip install comfy-cli && \
+comfy --version
 
 # Install ComfyUI
 RUN expect -c '\
