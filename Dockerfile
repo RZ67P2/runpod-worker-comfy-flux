@@ -42,9 +42,8 @@ WORKDIR /comfyui/custom_nodes
 RUN git clone https://github.com/ltdrdata/ComfyUI-Manager ComfyUI-Manager && \
     chmod +x ComfyUI-Manager/cm-cli.py
 
-# Install ComfyUI-Manager dependencies
-WORKDIR /comfyui/custom_nodes/ComfyUI-Manager
-RUN pip install -r requirements.txt
+# Install ComfyUI-Manager dependencies globally
+RUN pip install -r /comfyui/custom_nodes/ComfyUI-Manager/requirements.txt
 
 # go back to comfyui
 WORKDIR /comfyui
