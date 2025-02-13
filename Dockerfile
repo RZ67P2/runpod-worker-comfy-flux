@@ -40,7 +40,10 @@ RUN pip install -r requirements.txt
 # Install ComfyUI-Manager
 WORKDIR /custom_nodes
 
-RUN git clone https://github.com/ltdrdata/ComfyUI-Manager
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager ComfyUI-Manager
+
+# Print the current directory and list of files
+RUN echo "Current directory:" && pwd && ls -la
 
 # go back to comfyui
 WORKDIR /comfyui
