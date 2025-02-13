@@ -1,7 +1,7 @@
 #FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu20.04
 
 # Stage 1: Base image with common dependencies
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 as base
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu20.04 as base
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,12 +14,13 @@ ENV CMAKE_BUILD_PARALLEL_LEVEL=8
 
 # Install Python, git and other necessary tools
 RUN apt-get update && apt-get install -y \
-    python3.10 \
+    python3.11 \
     python3-pip \
     git \
     wget \
     libgl1 \
-    && ln -sf /usr/bin/python3.10 /usr/bin/python \
+    expect \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
 # Clean up to reduce image size
@@ -29,7 +30,16 @@ RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 RUN pip install comfy-cli
 
 # Install ComfyUI
-RUN /usr/bin/yes | comfy --workspace /comfyui install --cuda-version 11.8 --nvidia --version 0.2.7
+RUN expect -c '\
+    spawn comfy --workspace /comfyui install;\
+    expect "*";\
+    send "y\r";\
+    expect "*";\
+    send "\r";\
+    expect "*";\
+    send "y\r";\
+    expect eof;\
+'
 
 # Change working directory to ComfyUI
 WORKDIR /comfyui
@@ -81,9 +91,9 @@ RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/loras 
 RUN set -e && \
 echo "Starting model downloads..." && \
 for URL in \
-    "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors models/unet/flux1-dev.safetensors auth" \
     "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors models/clip/clip_l.safetensors noauth" \
     "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors models/vae/ae.safetensors auth" \
+    "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors models/unet/flux1-dev.safetensors auth" \
     "https://huggingface.co/BeichenZhang/LongCLIP-L/resolve/main/longclip-L.pt models/clip/longclip-L.pt noauth" \
     "https://huggingface.co/ai-forever/Real-ESRGAN/resolve/main/RealESRGAN_x2.pth models/upscale_models/RealESRGAN_x2.pth noauth" \
     "https://huggingface.co/nerijs/dark-fantasy-illustration-flux/resolve/main/darkfantasy_illustration_v2.safetensors models/loras/darkfantasy_illustration_v2.safetensors noauth" \
@@ -106,6 +116,8 @@ do \
             -O "$DEST" "$SRC" || exit 1; \
     fi; \
     echo "Completed download of $(basename $DEST)"; \
+    echo "Disk space after downloading $(basename $DEST):"; \
+    df -h; \
 done
     
 # Stage 3: Final image
