@@ -97,9 +97,13 @@ do \
     AUTH=$(echo $URL | cut -d' ' -f3); \
     echo "Starting download of $(basename $DEST)..."; \
     if [ "$AUTH" = "auth" ]; then \
-        wget --progress=bar:force:noscroll --header="Authorization: Bearer ${HUGGINGFACE_TOKEN}" -O "$DEST" "$SRC" || exit 1; \
+        wget --progress=bar:force:noscroll --header="Authorization: Bearer ${HUGGINGFACE_TOKEN}" \
+            --tries=5 --timeout=120 --waitretry=60 --continue \
+            -O "$DEST" "$SRC" || exit 1; \
     else \
-        wget --progress=bar:force:noscroll -O "$DEST" "$SRC" || exit 1; \
+        wget --progress=bar:force:noscroll \
+            --tries=5 --timeout=120 --waitretry=60 --continue \
+            -O "$DEST" "$SRC" || exit 1; \
     fi; \
     echo "Completed download of $(basename $DEST)"; \
 done
