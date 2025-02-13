@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
 # Clean up to reduce image size
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-RUN https://github.com/comfyanonymous/ComfyUI.git comfyui
+RUN git clone https://github.com/comfyanonymous/ComfyUI.git comfyui
 
 # Install torch
 RUN pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124
