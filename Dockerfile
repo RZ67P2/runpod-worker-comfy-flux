@@ -26,27 +26,23 @@ RUN apt-get update && apt-get install -y \
 # Clean up to reduce image size
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-# Install comfy-cli
-RUN pip install comfy-cli && \
-comfy --version
+RUN https://github.com/comfyanonymous/ComfyUI.git comfyui
 
-# Install ComfyUI
-RUN expect -c '\
-    set timeout 20;\
-    spawn comfy --workspace /comfyui install;\
-    expect "Do you agree to enable tracking to improve the application? \[y/N\]:";\
-    sleep 1;\
-    send "y\r";\
-    expect "What GPU do you have?";\
-    sleep 1;\
-    send "\r";\
-    expect "Install from https://github.com/comfyanonymous/ComfyUI to /comfyui? \[y/N\]:";\
-    sleep 1;\
-    send "y\r";\
-    expect eof;\
-'
+# Install torch
+RUN pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124
 
 # Change working directory to ComfyUI
+WORKDIR /comfyui
+
+# Install requirements
+RUN pip install -r requirements.txt
+
+# Install ComfyUI-Manager
+WORKDIR /custom_nodes
+
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager
+
+# go back to comfyui
 WORKDIR /comfyui
 
 # Install runpod
