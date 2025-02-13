@@ -59,23 +59,51 @@ CMD ["/start.sh"]
 # Stage 2: Download models
 FROM base as downloader
 
+# Define ARG and ENV with a default empty value
+ARG HUGGINGFACE_ACCESS_TOKEN
+ENV HUGGINGFACE_TOKEN=$HUGGINGFACE_ACCESS_TOKEN
+
+# Add more verbose token checking
+RUN echo "Checking Hugging Face token..." && \
+    if [ -z "$HUGGINGFACE_TOKEN" ]; then \
+        echo "Error: HUGGINGFACE_ACCESS_TOKEN is not set"; \
+        exit 1; \
+    else \
+        echo "Token is present (length: ${#HUGGINGFACE_TOKEN})"; \
+    fi
+
 # Change working directory to ComfyUI
 WORKDIR /comfyui
 
 # Create necessary directories
-RUN mkdir -p models/checkpoints models/vae models/unet models/clip
+RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/loras models/upscale_models
 
-RUN wget -O models/unet/flux_dev.safetensors https://civitai.com/api/download/models/691639?type=Model&format=SafeTensor&size=full&fp=fp32&token=70b8cd8fefe8eae3b6d88c3e7e0f3ec6 && \
-    wget -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
-    wget -O models/clip/longclip-L.pt https://huggingface.co/BeichenZhang/LongCLIP-L/resolve/main/longclip-L.pt && \
-    wget -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors && \
-    wget -O models/upscale_models/RealESRGAN_x2.pth https://huggingface.co/ai-forever/Real-ESRGAN/resolve/main/RealESRGAN_x2.pth && \
-    wget -O models/loras/flux_realism_lora.safetensors https://huggingface.co/comfyanonymous/flux_RealismLora_converted_comfyui/resolve/main/flux_realism_lora.safetensors && \
-    wget -O models/loras/darkfantasy_illustration_v2.safetensors https://huggingface.co/nerijs/dark-fantasy-illustration-flux/resolve/main/darkfantasy_illustration_v2.safetensors && \
-    wget -O models/loras/1shm43l_v3.safetensors https://huggingface.co/k0n8/IshmaelV3/resolve/main/1shm43l_v3.safetensors && \
-    wget -O models/loras/qu33qu3g_v3.safetensors https://huggingface.co/k0n8/Queequeng3k/resolve/main/qu33qu3g_v3.safetensors && \
-    wget -O models/loras/flux-RealismLora.safetensors https://huggingface.co/XLabs-AI/flux-RealismLora/resolve/main/lora.safetensors
-
+RUN set -e && \
+echo "Starting model downloads..." && \
+for URL in \
+    "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors models/unet/flux1-dev.safetensors auth" \
+    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors models/clip/clip_l.safetensors noauth" \
+    "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors models/vae/ae.safetensors auth" \
+    "https://huggingface.co/BeichenZhang/LongCLIP-L/resolve/main/longclip-L.pt models/clip/longclip-L.pt noauth" \
+    "https://huggingface.co/ai-forever/Real-ESRGAN/resolve/main/RealESRGAN_x2.pth models/upscale_models/RealESRGAN_x2.pth noauth" \
+    "https://huggingface.co/nerijs/dark-fantasy-illustration-flux/resolve/main/darkfantasy_illustration_v2.safetensors models/loras/darkfantasy_illustration_v2.safetensors noauth" \
+    "https://huggingface.co/comfyanonymous/flux_RealismLora_converted_comfyui/resolve/main/flux_realism_lora.safetensors models/loras/flux_realism_lora.safetensors noauth" \
+    "https://huggingface.co/k0n8/IshmaelV3/resolve/main/1shm43l_v3.safetensors models/loras/1shm43l_v3.safetensors noauth" \
+    "https://huggingface.co/k0n8/Queequengv4/resolve/main/Qu33qu3g_v4.safetensors models/loras/Qu33qu3g_v4.safetensors noauth" \
+    "https://huggingface.co/XLabs-AI/flux-RealismLora/resolve/main/lora.safetensors models/loras/flux-RealismLora.safetensors noauth"; \
+do \
+    SRC=$(echo $URL | cut -d' ' -f1); \
+    DEST=$(echo $URL | cut -d' ' -f2); \
+    AUTH=$(echo $URL | cut -d' ' -f3); \
+    echo "Starting download of $(basename $DEST)..."; \
+    if [ "$AUTH" = "auth" ]; then \
+        wget --progress=bar:force:noscroll --header="Authorization: Bearer ${HUGGINGFACE_TOKEN}" -O "$DEST" "$SRC" || exit 1; \
+    else \
+        wget --progress=bar:force:noscroll -O "$DEST" "$SRC" || exit 1; \
+    fi; \
+    echo "Completed download of $(basename $DEST)"; \
+done
+    
 # Stage 3: Final image
 FROM base as final
 
