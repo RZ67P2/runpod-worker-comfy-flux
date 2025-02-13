@@ -37,13 +37,19 @@ WORKDIR /comfyui
 # Install requirements
 RUN pip install -r requirements.txt
 
-# Install ComfyUI-Manager in the correct location
-WORKDIR /comfyui/custom_nodes
-RUN git clone https://github.com/ltdrdata/ComfyUI-Manager ComfyUI-Manager && \
-    chmod +x ComfyUI-Manager/cm-cli.py
+WORKDIR /
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager /comfyui/custom_nodes/ComfyUI-Manager && \
+    chmod +x /comfyui/custom_nodes/ComfyUI-Manager/cm-cli.py && \
+    pip install -r /comfyui/custom_nodes/ComfyUI-Manager/requirements.txt && \
+    # Debug info
+    echo "Python path: $(which python)" && \
+    echo "Python version: $(python --version)" && \
+    echo "Pip version: $(pip --version)" && \
+    echo "Installed packages:" && \
+    pip list | grep typer && \
+    echo "Python sys.path:" && \
+    python -c "import sys; print('\n'.join(sys.path))"
 
-# Install ComfyUI-Manager dependencies globally
-RUN pip install -r /comfyui/custom_nodes/ComfyUI-Manager/requirements.txt
 
 # go back to comfyui
 WORKDIR /comfyui
@@ -63,6 +69,9 @@ RUN chmod +x /start.sh /restore_snapshot.sh
 
 # Optionally copy the snapshot file
 ADD *snapshot*.json /
+
+# Before running restore_snapshot.sh, verify typer again
+RUN python -c "import typer; print(f'Typer is installed at: {typer.__file__}')" || pip install typer==0.15.1
 
 # Restore the snapshot to install custom nodes
 RUN /restore_snapshot.sh

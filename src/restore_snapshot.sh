@@ -2,6 +2,15 @@
 
 set -e
 
+# Ensure typer is installed and show debug info
+echo "Installing/verifying typer..."
+pip install typer==0.15.1
+echo "Python environment:"
+which python
+python --version
+echo "Typer location:"
+python -c "import typer; print(f'Using typer from: {typer.__file__}')"
+
 SNAPSHOT_FILE=$(ls /*snapshot*.json 2>/dev/null | head -n 1)
 
 if [ -z "$SNAPSHOT_FILE" ]; then
