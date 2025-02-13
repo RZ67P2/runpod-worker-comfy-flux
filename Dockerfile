@@ -32,12 +32,16 @@ comfy --version
 
 # Install ComfyUI
 RUN expect -c '\
+    set timeout 20;\
     spawn comfy --workspace /comfyui install;\
-    expect "*";\
+    expect "Do you agree to enable tracking to improve the application? \[y/N\]:";\
+    sleep 1;\
     send "y\r";\
-    expect "*";\
+    expect "What GPU do you have?";\
+    sleep 1;\
     send "\r";\
-    expect "*";\
+    expect "Install from https://github.com/comfyanonymous/ComfyUI to /comfyui? \[y/N\]:";\
+    sleep 1;\
     send "y\r";\
     expect eof;\
 '
