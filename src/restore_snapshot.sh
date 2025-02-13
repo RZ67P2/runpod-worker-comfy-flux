@@ -5,11 +5,29 @@ set -e
 # Ensure typer is installed and show debug info
 echo "Installing/verifying typer..."
 pip install typer==0.15.1
+
 echo "Python environment:"
 which python
 python --version
-echo "Typer location:"
-python -c "import typer; print(f'Using typer from: {typer.__file__}')"
+echo "Python paths:"
+python -c "import sys; print('Python executable:', sys.executable); print('Python path:\n' + '\n'.join(sys.path))"
+
+echo "Pip install location:"
+pip -V
+
+echo "Trying to import typer..."
+python -c "
+try:
+    import typer
+    print(f'Success! Typer found at: {typer.__file__}')
+except ImportError as e:
+    print(f'Failed to import typer: {e}')
+    print('\nInstalled packages:')
+    import pkg_resources
+    for pkg in pkg_resources.working_set:
+        print(f'{pkg.key}=={pkg.version}')
+    exit(1)
+"
 
 SNAPSHOT_FILE=$(ls /*snapshot*.json 2>/dev/null | head -n 1)
 

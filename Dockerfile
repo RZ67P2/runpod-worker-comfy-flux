@@ -11,17 +11,28 @@ ENV PIP_PREFER_BINARY=1
 ENV PYTHONUNBUFFERED=1 
 # Speed up some cmake builds
 ENV CMAKE_BUILD_PARALLEL_LEVEL=8
+# Add the Python 3.11 site-packages directory to the PYTHONPATH
+ENV PYTHONPATH="/usr/local/lib/python3.11/site-packages:${PYTHONPATH}"
 
 # Install Python, git and other necessary tools
 RUN apt-get update && apt-get install -y \
     python3.11 \
+    python3.11-distutils \
+    python3.11-venv \
     python3-pip \
     git \
     wget \
     libgl1 \
     expect \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
     && ln -sf /usr/bin/python3.11 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
+
+# Install pip for Python 3.11 specifically
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3.11 get-pip.py && \
+    python3.11 -m pip install --upgrade pip && \
+    rm get-pip.py
 
 # Clean up to reduce image size
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
@@ -46,10 +57,7 @@ RUN git clone https://github.com/ltdrdata/ComfyUI-Manager /comfyui/custom_nodes/
     echo "Python version: $(python --version)" && \
     echo "Pip version: $(pip --version)" && \
     echo "Installed packages:" && \
-    pip list | grep typer && \
-    echo "Python sys.path:" && \
-    python -c "import sys; print('\n'.join(sys.path))"
-
+    pip list | grep typer 
 
 # go back to comfyui
 WORKDIR /comfyui
@@ -70,8 +78,14 @@ RUN chmod +x /start.sh /restore_snapshot.sh
 # Optionally copy the snapshot file
 ADD *snapshot*.json /
 
-# Before running restore_snapshot.sh, verify typer again
-RUN python -c "import typer; print(f'Typer is installed at: {typer.__file__}')" || pip install typer==0.15.1
+# Before running restore_snapshot.sh, verify Python environment and typer
+RUN echo "Verifying Python environment:" && \
+    python --version && \
+    pip --version && \
+    echo "Installing typer..." && \
+    pip install typer==0.15.1 && \
+    echo "Verifying typer installation:" && \
+    python -c "import typer; print(f'Typer is installed at: {typer.__file__}')"
 
 # Restore the snapshot to install custom nodes
 RUN /restore_snapshot.sh
