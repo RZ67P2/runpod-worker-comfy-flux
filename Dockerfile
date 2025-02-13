@@ -27,7 +27,6 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git comfyui
-RUN echo "After ComfyUI clone:" && pwd && ls -la
 
 # Install torch
 RUN pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124
@@ -41,11 +40,11 @@ RUN pip install -r requirements.txt
 # Install ComfyUI-Manager in the correct location
 WORKDIR /comfyui/custom_nodes
 RUN git clone https://github.com/ltdrdata/ComfyUI-Manager ComfyUI-Manager && \
-    chmod +x ComfyUI-Manager/cm-cli.py && \
-    echo "After Manager install:" && pwd && ls -la
+    chmod +x ComfyUI-Manager/cm-cli.py && 
 
-# Print the current directory and list of files
-RUN echo "Current directory:" && pwd && ls -la
+# Install ComfyUI-Manager dependencies
+WORKDIR /comfyui/custom_nodes/ComfyUI-Manager
+RUN pip install -r requirements.txt
 
 # go back to comfyui
 WORKDIR /comfyui

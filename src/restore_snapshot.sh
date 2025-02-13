@@ -10,9 +10,6 @@ if [ -z "$SNAPSHOT_FILE" ]; then
 fi
 
 echo "runpod-worker-comfy: restoring snapshot: $SNAPSHOT_FILE"
-echo "Current directory: $(pwd)"
-echo "Checking if script exists:"
-ls -la /comfyui/custom_nodes/ComfyUI-Manager/cm-cli.py
 
 #comfy --workspace /comfyui node restore-snapshot "$SNAPSHOT_FILE" --pip-non-url
 
