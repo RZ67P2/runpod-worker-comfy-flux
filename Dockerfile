@@ -49,6 +49,20 @@ RUN pip install runpod requests typer==0.15.1
 # Create model directories and download models
 RUN mkdir -p /comfyui/models/checkpoints /comfyui/models/vae /comfyui/models/unet /comfyui/models/clip /comfyui/models/loras /comfyui/models/upscale_models
 
+
+# Define ARG and ENV with a default empty value
+ARG HUGGINGFACE_ACCESS_TOKEN
+ENV HUGGINGFACE_TOKEN=$HUGGINGFACE_ACCESS_TOKEN
+
+# Add more verbose token checking
+RUN echo "Checking Hugging Face token..." && \
+    if [ -z "$HUGGINGFACE_TOKEN" ]; then \
+        echo "Error: HUGGINGFACE_ACCESS_TOKEN is not set"; \
+        exit 1; \
+    else \
+        echo "Token is present (length: ${#HUGGINGFACE_TOKEN})"; \
+    fi
+    
 # Download models with your original wget commands
 RUN set -e && \
     echo "Starting model downloads..." && \
